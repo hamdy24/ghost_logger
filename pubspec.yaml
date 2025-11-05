@@ -1,18 +1,18 @@
 name: ghost_logger
-description: "Can be Unseen but always there. Stealing errors before they steal your users' experience. A lightweight, flexible logging utility with emoji indicators and optional crash reporting integration."
+description: "Can be Unseen but always there. Stealing errors before they steal your users' experience. A flexible logging utility with optional crash reporting integration."
 version: 0.0.1
 homepage: https://github.com/hamdy24/ghost_logger
 repository: https://github.com/hamdy24/ghost_logger
 issue_tracker: https://github.com/hamdy24/ghost_logger/issues
-
+publisher: hamdyaboaouf24@gmail.com
+license: MIT
 resolution: workspace
 environment:
   sdk: ^3.9.2
   flutter: ">=1.17.0"
 
-dependencies:
-  flutter:
-    sdk: flutter
+
+dependencies: {}
 
 dev_dependencies:
   flutter_test:
