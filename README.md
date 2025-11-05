@@ -22,7 +22,7 @@ Add `ghost_logger` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  ghost_logger: ^0.1.0
+  ghost_logger: ^0.0.1
 ```
 
 Then run:
@@ -126,36 +126,45 @@ Ghost Logger becomes truly powerful when integrated with crash reporting service
 
 ### With Firebase Crashlytics
 
-Use the companion package `ghost_logger_firebase`:
+Implement the `CrashReporter` interface for your preferred service:
 
-```yaml
-dependencies:
-  ghost_logger: ^0.1.0
-  ghost_logger_firebase: ^0.1.0
-  firebase_core: ^6.0.0
-  firebase_crashlytics: ^3.5.0
 ```
-
-Configure in your main:
-
-```dart
-import 'package:firebase_core/firebase_core.dart';
 import 'package:ghost_logger/ghost_logger.dart';
-import 'package:ghost_logger_firebase/ghost_logger_firebase.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
-  await GhostLogger.configure(
-    isDebugMode: false,
-    loggerType: LoggerType.console,
-    crashReporter: GhostFirebase(),
-    enableCrashReporting: true,
-  );
-
-  runApp(const MyApp());
+class FirebaseCrashReporter implements CrashReporter {
+  @override
+  Future<void> log(String message) async {
+    await FirebaseCrashlytics.instance.log(message);
+  }
+  
+  @override
+  Future<void> recordError(
+    dynamic exception,
+    StackTrace? stackTrace, {
+    String? reason,
+  }) async {
+    await FirebaseCrashlytics.instance.recordError(
+      exception,
+      stackTrace,
+      reason: reason,
+    );
+  }
+  
+  @override
+  Future<void> setCollectionEnabled(bool enabled) async {
+    await FirebaseCrashlytics.instance
+        .setCrashlyticsCollectionEnabled(enabled);
+  }
 }
+
+// Configure with crash reporting
+await GhostLogger.configure(
+  isDebugMode: false,
+  loggerType: LoggerType.console,
+  crashReporter: FirebaseCrashReporter(),
+  enableCrashReporting: true,
+);
 ```
 
 Now all errors are silently reported to Firebase Crashlytics while still appearing in your console during development.
