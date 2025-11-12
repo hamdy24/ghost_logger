@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 
+import 'ansi_colors.dart';
 import 'crash_reporter.dart';
 import 'log_level.dart';
 import 'logger_type.dart';
@@ -16,9 +18,8 @@ import 'logger_type.dart';
 ///
 /// Configure the logger once at app startup:
 ///
-/// ```
+/// ```dart
 /// await GhostLogger.configure(
-///   isDebugMode: true,
 ///   loggerType: LoggerType.console,
 /// );
 /// ```
@@ -27,7 +28,7 @@ import 'logger_type.dart';
 ///
 /// Log messages with different severity levels:
 ///
-/// ```
+/// ```dart
 /// GhostLogger.log(
 ///   message: 'User logged in',
 ///   level: LogLevel.info,
@@ -39,9 +40,8 @@ import 'logger_type.dart';
 ///
 /// Integrate with Firebase Crashlytics or other services:
 ///
-/// ```
+/// ```dart
 /// await GhostLogger.configure(
-///   isDebugMode: false,
 ///   crashReporter: GhostFirebase(),
 ///   enableCrashReporting: true,
 /// );
@@ -49,7 +49,7 @@ import 'logger_type.dart';
 class GhostLogger {
   GhostLogger._();
 
-  static bool _isDebugMode = true;
+  static bool _isDebugMode = kDebugMode;
   static LoggerType _loggerType = LoggerType.print;
   static CrashReporter _crashReporter = const NullCrashReporter();
   static bool _reportToCrashlytics = false;
@@ -59,11 +59,12 @@ class GhostLogger {
   /// This should be called once at application startup.
   ///
   /// [isDebugMode] controls whether logs are visible in console output.
+  /// Defaults to Flutter's [kDebugMode].
   /// [loggerType] determines the output mechanism (default: print).
   /// [crashReporter] optional crash reporting service integration.
   /// [enableCrashReporting] whether to report logs to crash service (default: false).
   static Future<void> configure({
-    required bool isDebugMode,
+    bool isDebugMode = kDebugMode,
     LoggerType loggerType = LoggerType.print,
     CrashReporter? crashReporter,
     bool enableCrashReporting = false,
@@ -117,19 +118,42 @@ class GhostLogger {
     LogLevel level,
     StackTrace? stackTrace,
   ) {
+    // Select color based on log level
+    String color;
+    switch (level) {
+      case LogLevel.debug:
+        color = AnsiColors.gray;
+        break;
+      case LogLevel.info:
+        color = AnsiColors.cyan;
+        break;
+      case LogLevel.warning:
+        color = AnsiColors.yellow;
+        break;
+      case LogLevel.error:
+        color = AnsiColors.red;
+        break;
+    }
+
+    // Colorize the message
+    final coloredMessage = AnsiColors.wrap(message, color);
+    final coloredStackTrace = stackTrace != null
+        ? '$color$stackTrace${AnsiColors.reset}'
+        : null;
+
     switch (_loggerType) {
       case LoggerType.print:
         // ignore: avoid_print
-        print(message);
-        if (stackTrace != null) {
+        print("[GhostLogger] $coloredMessage");
+        if (coloredStackTrace != null) {
           // ignore: avoid_print
-          print(stackTrace);
+          print(coloredStackTrace);
         }
         break;
 
       case LoggerType.console:
         developer.log(
-          message,
+          coloredMessage,
           level: level.numericLevel,
           name: 'GhostLogger',
           stackTrace: stackTrace,
@@ -139,7 +163,7 @@ class GhostLogger {
       case LoggerType.logger:
         // Reserved for future custom logger implementation
         developer.log(
-          message,
+          coloredMessage,
           level: level.numericLevel,
           name: 'GhostLogger',
           stackTrace: stackTrace,

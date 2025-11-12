@@ -5,7 +5,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GhostLogger.configure(
-    isDebugMode: true,
     loggerType: LoggerType.console,
   );
 
@@ -23,7 +22,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Ghost Logger Demo'),
+      home: const MyHomePage(title: 'Ghost Logger Demo - Now with Colors!'),
     );
   }
 }
@@ -58,42 +57,59 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
                 ),
               ),
+              const SizedBox(height: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  '✨ Now with colored terminal output! ✨',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
               const SizedBox(height: 32),
               _LogButton(
-                label: '⚒️ Log Debug',
+                label: '⚒️ Log Debug (Gray)',
+                color: Colors.grey,
                 onPressed: () {
                   GhostLogger.log(
-                    message: 'This is a debug message',
+                    message:
+                        'This is a debug message - check your terminal to see it in gray!',
                     level: LogLevel.debug,
                     tag: 'Example',
                   );
                 },
               ),
               _LogButton(
-                label: '👉 Log Info',
+                label: '👉 Log Info (Cyan)',
+                color: Colors.cyan,
                 onPressed: () {
                   GhostLogger.log(
-                    message: 'User performed an action',
+                    message:
+                        'User performed an action - check your terminal to see it in cyan!',
                     level: LogLevel.info,
                     tag: 'Example',
                   );
                 },
               ),
               _LogButton(
-                label: '⚠️ Log Warning',
+                label: '⚠️ Log Warning (Yellow)',
+                color: Colors.orange,
                 onPressed: () {
                   GhostLogger.log(
-                    message: 'This might need attention',
+                    message:
+                        'This might need attention - check your terminal to see it in yellow!',
                     level: LogLevel.warning,
                     tag: 'Example',
                   );
                 },
               ),
               _LogButton(
-                label: '❌ Log Error',
+                label: '❌ Log Error (Red)',
+                color: Colors.red,
                 onPressed: () {
                   GhostLogger.log(
-                    message: 'An error occurred silently',
+                    message:
+                        'An error occurred silently - check your terminal to see it in red!',
                     level: LogLevel.error,
                     tag: 'Example',
                     stackTrace: StackTrace.current,
@@ -104,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Check your console output to see the logged messages',
+                  'Check your console output to see the colored messages',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
@@ -119,15 +135,27 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class _LogButton extends StatelessWidget {
   final String label;
+  final Color color;
   final VoidCallback onPressed;
 
-  const _LogButton({required this.label, required this.onPressed});
+  const _LogButton({
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8),
-      child: ElevatedButton(onPressed: onPressed, child: Text(label)),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+        ),
+        onPressed: onPressed,
+        child: Text(label),
+      ),
     );
   }
 }

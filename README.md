@@ -1,8 +1,8 @@
 # Ghost Logger
 
-**Stealing errors before they steal your users' experience.**
+**Can be Unseen but always there. Stealing errors before they steal your users' experience.**
 
-Can be Unseen but always there. Stealing errors before they steal your users' experience. A lightweight, flexible logging utility with emoji indicators and optional crash reporting integration.
+A lightweight, flexible logging utility with colors/emoji indicators and optional crash reporting integration.
 
 ## Features
 
@@ -13,7 +13,7 @@ Can be Unseen but always there. Stealing errors before they steal your users' ex
 - 🔌 **Pluggable Crash Reporting** - Implement CrashReporter interface for any service
 - 🛠️ **Multiple Output Mechanisms** - Print or developer.log output
 - 🧪 **Fully Testable** - Zero hard dependencies on crash services
-- 📦 **Zero Dependencies** - Only depends on Dart SDK
+- 📦 **Zero Dependencies** - Only depends on Flutter SDK
 - 🌍 **Multi-Platform** - Works on iOS, Android, Web, macOS, Windows, Linux
 
 ## Installation
@@ -22,7 +22,7 @@ Add `ghost_logger` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  ghost_logger: ^0.0.1
+  ghost_logger: ^1.0.0
 ```
 
 Then run:
@@ -44,7 +44,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GhostLogger.configure(
-    isDebugMode: true,
+    isDebugMode: true, // defaults to Flutter's kDebugMode
     loggerType: LoggerType.console,
   );
 
@@ -94,6 +94,17 @@ Ghost Logger supports four severity levels, each with a unique emoji for quick i
 | Warning | ⚠️ | Potential issues, deprecations |
 | Error | ❌ | Failures that need attention |
 
+## Colored Terminal Output
+
+Ghost Logger automatically colors your terminal logs based on severity level for better readability:
+
+- 🎨 **Debug** - Gray text
+- 🎨 **Info** - Cyan text
+- 🎨 **Warning** - Yellow text
+- 🎨 **Error** - Red text
+
+Colors work in most modern terminals and IDEs like VS Code, Android Studio, and IntelliJ IDEA.
+
 ## Output Mechanisms
 
 Choose how Ghost Logger outputs messages using `LoggerType`:
@@ -104,14 +115,14 @@ Uses Dart's `print()` function. Simple but may truncate very long messages.
 
 ```dart
 await GhostLogger.configure(
-  isDebugMode: true,
+  isDebugMode: true, // defaults to Flutter's kDebugMode
   loggerType: LoggerType.print,
 );
 ```
 
 ### Console
 
-Uses `dart:developer` log with enhanced features including log levels.
+Uses `dart:developer` log with enhanced features including log levels but in some IDEs the coloring may not work properly.
 
 ```dart
 await GhostLogger.configure(
@@ -211,7 +222,7 @@ await GhostLogger.configure(
 Initializes Ghost Logger with configuration options.
 
 **Parameters:**
-- `isDebugMode` (required): Enable/disable console output
+- `isDebugMode` Enable/disable console output (default: `kDebugMode`)
 - `loggerType`: Output mechanism (default: `LoggerType.print`)
 - `crashReporter`: Crash reporting implementation (optional)
 - `enableCrashReporting`: Enable crash service reporting (default: `false`)
