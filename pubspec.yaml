@@ -1,6 +1,6 @@
 name: ghost_logger
 description: "Can be Unseen but always there. Stealing errors before they steal your users' experience. A flexible logging utility with optional crash reporting integration."
-version: 1.1.0
+version: 1.1.1
 homepage: https://github.com/hamdy24/ghost_logger
 repository: https://github.com/hamdy24/ghost_logger
 issue_tracker: https://github.com/hamdy24/ghost_logger/issues

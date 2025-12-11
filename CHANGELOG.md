@@ -1,3 +1,11 @@
+## 1.1.1
+
+- **DOCS**: Updated README with convenience methods examples
+- **DOCS**: Added comprehensive API reference
+- **DOCS**: Improved Firebase Crashlytics integration guide
+- **DOCS**: Added troubleshooting section
+- No code changes
+---
 ## 1.1.0
 
 ### Features

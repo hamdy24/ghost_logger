@@ -1,318 +1,385 @@
 # Ghost Logger
 
-**Can be Unseen but always there. Stealing errors before they steal your users' experience.**
+**Unseen but always there. Stealing errors before they steal your users' experience.**
 
-A lightweight, flexible logging utility with colors/emoji indicators and optional crash reporting integration.
+A lightweight, flexible logging utility for Flutter with colored output, emoji indicators, and optional crash reporting integration.
 
 ## Features
 
 - 👻 **Silent Operation** - Works invisibly in the background
-- 🚨 **Automatic Reporting** - Steals errors to prevent user impact
-- 🎯 **Multiple Log Levels** - Debug, info, warning, and error categorization
+- 🚨 **Automatic Reporting** - Steals errors before they impact users
+- 🎯 **Convenience Methods** - Quick logging with `logDebug()`, `logInfo()`, `logWarning()`, `logError()`
+- 🎨 **Colored Output** - Visual log levels with customizable colors
 - 😊 **Emoji Indicators** - Quick visual scanning of logs
-- 🔌 **Pluggable Crash Reporting** - Implement CrashReporter interface for any service
-- 🛠️ **Multiple Output Mechanisms** - Print or developer.log output
-- 🧪 **Fully Testable** - Zero hard dependencies on crash services
-- 📦 **Zero Dependencies** - Only depends on Flutter SDK
+- 🔌 **Pluggable Crash Reporting** - Works with any crash service via simple interface
+- 🛠️ **Multiple Output Mechanisms** - Choose between print or developer.log
+- 📦 **Minimal Dependencies** - Only depends on Flutter SDK
 - 🌍 **Multi-Platform** - Works on iOS, Android, Web, macOS, Windows, Linux
 
 ## Installation
 
 Add `ghost_logger` to your `pubspec.yaml`:
 
-```yaml
-dependencies:
-  ghost_logger: ^1.0.0
+```
+dependencies: ghost_logger: ^1.1.0
 ```
 
 Then run:
 
-```bash
-dart pub get
+```
+flutter pub get
 ```
 
 ## Quick Start
 
 ### Basic Setup
 
-Import and configure Ghost Logger at your app startup:
+Configure Ghost Logger once at your app startup:
 
-```dart
+```
+
 import 'package:ghost_logger/ghost_logger.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await GhostLogger.configure(
-    isDebugMode: true, // defaults to Flutter's kDebugMode
-    loggerType: LoggerType.console,
-  );
-
-  runApp(const MyApp());
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    await GhostLogger.configure(
+        loggerType: LoggerType.console,
+    );
+    
+    runApp(const MyApp());
 }
 ```
 
-### Logging Messages
+### Using Convenience Methods (Recommended)
 
-Log messages with different severity levels:
+Ghost Logger provides convenience methods for cleaner code:
 
-```dart
-GhostLogger.log(
-  message: 'Processing user data',
-  level: LogLevel.debug,
-  tag: 'DataManager',
+```
+
+// Debug logs
+GhostLogger.logDebug('Variable value: $data', tag: 'DataService');
+
+// Info logs
+GhostLogger.logInfo('User logged in successfully', tag: 'Auth');
+
+// Warning logs
+GhostLogger.logWarning('Deprecated API called', tag: 'Network');
+
+// Error logs
+GhostLogger.logError(
+'Failed to load data',
+tag: 'API',
+stackTrace: StackTrace.current,
 );
+```
 
-GhostLogger.log(
-  message: 'User logged in successfully',
-  level: LogLevel.info,
-  tag: 'Auth',
-);
+### Using the Main Log Method
 
-GhostLogger.log(
-  message: 'Deprecated API usage detected',
-  level: LogLevel.warning,
-  tag: 'API',
-);
+You can also use the main `log()` method with explicit level:
 
+```
 GhostLogger.log(
-  message: 'Network request failed',
-  level: LogLevel.error,
-  tag: 'Network',
-  stackTrace: StackTrace.current,
+message: 'Processing user data',
+level: LogLevel.debug,
+tag: 'DataManager',
 );
 ```
 
 ## Log Levels
 
-Ghost Logger supports four severity levels, each with a unique emoji for quick identification:
+Ghost Logger supports four severity levels with unique visual indicators:
 
-| Level | Emoji | Use Case |
-|-------|-------|----------|
-| Debug | ⚒️ | Development information, variable values |
-| Info | 👉 | General app events, user actions |
-| Warning | ⚠️ | Potential issues, deprecations |
-| Error | ❌ | Failures that need attention |
+| Level | Emoji | Color | Use Case |
+|-------|-------|-------|----------|
+| Debug | ⚒️ | Gray | Development information, variable values |
+| Info | 👉 | Cyan | General app events, user actions |
+| Warning | ⚠️ | Yellow | Potential issues, deprecations |
+| Error | ❌ | Red | Failures that need attention |
 
-## Colored Terminal Output
+## Colored Output
 
-Ghost Logger automatically colors your terminal logs based on severity level for better readability:
+Ghost Logger uses colored terminal output for better readability. Colors are **enabled by default** and work in most modern terminals and IDEs.
 
-- 🎨 **Debug** - Gray text
-- 🎨 **Info** - Cyan text
-- 🎨 **Warning** - Yellow text
-- 🎨 **Error** - Red text
+**Supported Environments:**
+- ✅ VS Code Terminal
+- ✅ IntelliJ IDEA / Android Studio (with some limitations)
+- ✅ External terminals (Terminal.app, iTerm2, Windows Terminal, etc.)
 
-Colors work in most modern terminals and IDEs like VS Code, Android Studio, and IntelliJ IDEA.
+**To disable colors:**
+
+```
+await GhostLogger.configure(
+withColors: false,  // Disable colors
+);
+```
+
+**Note:** Some IDE consoles may have limited color support. If you experience issues, disable colors using the option above.
 
 ## Output Mechanisms
 
-Choose how Ghost Logger outputs messages using `LoggerType`:
-
 ### Print (Default)
 
-Uses Dart's `print()` function. Simple but may truncate very long messages.
+Uses Dart's `print()` function with full color support:
 
-```dart
+```
 await GhostLogger.configure(
-  isDebugMode: true, // defaults to Flutter's kDebugMode
-  loggerType: LoggerType.print,
+loggerType: LoggerType.print,
+withColors: true,
 );
 ```
+
+**Best for:** General development, colored output
 
 ### Console
 
-Uses `dart:developer` log with enhanced features including log levels but in some IDEs the coloring may not work properly.
+Uses `dart:developer` log with enhanced debugging features:
 
-```dart
+```
 await GhostLogger.configure(
-  isDebugMode: true,
-  loggerType: LoggerType.console,
+loggerType: LoggerType.console,
 );
 ```
+
+**Best for:** Integration with DevTools, timeline debugging
+
+**Note:** Colors are not applied with `console` type for IDE compatibility.
 
 ## Crash Reporting Integration
 
-Ghost Logger becomes truly powerful when integrated with crash reporting services. It works with any service that implements the `CrashReporter` interface.
+Ghost Logger integrates with any crash reporting service through the `CrashReporter` interface.
 
-### With Firebase Crashlytics
-
-Implement the `CrashReporter` interface for your preferred service:
+### Firebase Crashlytics Example
 
 ```
-import 'package:ghost_logger/ghost_logger.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:ghost_logger/ghost_logger.dart';
+
+// 1. Implement the CrashReporter interface
 class FirebaseCrashReporter implements CrashReporter {
-  @override
-  Future<void> log(String message) async {
-    await FirebaseCrashlytics.instance.log(message);
-  }
-  
-  @override
-  Future<void> recordError(
-    dynamic exception,
-    StackTrace? stackTrace, {
-    String? reason,
-  }) async {
-    await FirebaseCrashlytics.instance.recordError(
-      exception,
-      stackTrace,
-      reason: reason,
-    );
-  }
-  
-  @override
-  Future<void> setCollectionEnabled(bool enabled) async {
-    await FirebaseCrashlytics.instance
-        .setCrashlyticsCollectionEnabled(enabled);
-  }
+@override
+Future<void> log(String message) async {
+await FirebaseCrashlytics.instance.log(message);
 }
 
-// Configure with crash reporting
-await GhostLogger.configure(
-  isDebugMode: false,
-  loggerType: LoggerType.console,
-  crashReporter: FirebaseCrashReporter(),
-  enableCrashReporting: true,
+@override
+Future<void> recordError(
+dynamic exception,
+StackTrace? stackTrace, {
+String? reason,
+}) async {
+await FirebaseCrashlytics.instance.recordError(
+exception,
+stackTrace,
+reason: reason,
+fatal: false,
 );
+}
+
+@override
+Future<void> setCollectionEnabled(bool enabled) async {
+await FirebaseCrashlytics.instance
+.setCrashlyticsCollectionEnabled(enabled);
+}
+}
+
+// 2. Configure in main()
+void main() async {
+WidgetsFlutterBinding.ensureInitialized();
+
+await Firebase.initializeApp();
+
+await GhostLogger.configure(
+crashReporter: FirebaseCrashReporter(),
+enableCrashReporting: true,
+);
+
+runApp(const MyApp());
+}
 ```
 
-Now all errors are silently reported to Firebase Crashlytics while still appearing in your console during development.
+Now all error logs are automatically reported to Firebase Crashlytics!
 
 ### Custom Crash Reporter
 
-Implement the `CrashReporter` interface for custom services:
+Implement `CrashReporter` for any service (Sentry, Datadog, etc.):
 
-```dart
-import 'package:ghost_logger/ghost_logger.dart';
-
+```
 class CustomCrashReporter implements CrashReporter {
-  @override
-  Future<void> log(String message) async {
-    await sendToCrashService(message);
-  }
-
-  @override
-  Future<void> recordError(
-    dynamic exception,
-    StackTrace? stackTrace, {
-    String? reason,
-  }) async {
-    await sendErrorToCrashService(exception, stackTrace, reason);
-  }
-
-  @override
-  Future<void> setCollectionEnabled(bool enabled) async {
-    await configureCollection(enabled);
-  }
+@override
+Future<void> log(String message) async {
+// Your implementation
 }
 
-await GhostLogger.configure(
-  isDebugMode: false,
-  crashReporter: CustomCrashReporter(),
-  enableCrashReporting: true,
-);
+@override
+Future<void> recordError(
+dynamic exception,
+StackTrace? stackTrace, {
+String? reason,
+}) async {
+// Your implementation
+}
+
+@override
+Future<void> setCollectionEnabled(bool enabled) async {
+// Your implementation
+}
+}
 ```
 
 ## API Reference
 
 ### GhostLogger.configure()
 
-Initializes Ghost Logger with configuration options.
+Configures the logger. Call once at app startup.
 
-**Parameters:**
-- `isDebugMode` Enable/disable console output (default: `kDebugMode`)
-- `loggerType`: Output mechanism (default: `LoggerType.print`)
-- `crashReporter`: Crash reporting implementation (optional)
-- `enableCrashReporting`: Enable crash service reporting (default: `false`)
-
-```dart
-await GhostLogger.configure(
-  isDebugMode: !kReleaseMode,
-  loggerType: LoggerType.console,
-  crashReporter: GhostFirebase(),
-  enableCrashReporting: !kDebugMode,
-);
+```
+await GhostLogger.configure({
+bool isDebugMode = kDebugMode,           // Show logs in debug mode
+LoggerType loggerType = LoggerType.print, // Output mechanism
+CrashReporter? crashReporter,             // Crash service integration
+bool withColors = true,                   // Enable colored output
+bool enableCrashReporting = false,        // Enable crash service
+});
 ```
 
 ### GhostLogger.log()
 
-Logs a message with optional metadata.
+Main logging method with full control:
 
-**Parameters:**
-- `message` (required): The log content
-- `level`: Log severity (default: `LogLevel.debug`)
-- `tag`: Optional identifier for the log source
-- `stackTrace`: Optional stack trace for context
-- `reportToCrashService`: Override crash reporting for this log (optional)
+```
+await GhostLogger.log({
+required dynamic message,                 // Log content
+LogLevel level = LogLevel.debug,          // Severity level
+String? tag,                              // Source identifier
+StackTrace? stackTrace,                   // Error context
+bool? reportToCrashService,               // Override crash reporting
+});
+```
 
-```dart
-await GhostLogger.log(
-  message: 'Something happened',
-  level: LogLevel.info,
-  tag: 'MyClass',
-  stackTrace: StackTrace.current,
-);
+### Convenience Methods
+
+Quick logging methods for common use cases:
+
+```
+// Debug logging
+await GhostLogger.logDebug(message, {tag, stackTrace, reportToCrashService});
+
+// Info logging
+await GhostLogger.logInfo(message, {tag, stackTrace, reportToCrashService});
+
+// Warning logging
+await GhostLogger.logWarning(message, {tag, stackTrace, reportToCrashService});
+
+// Error logging
+await GhostLogger.logError(message, {tag, stackTrace, reportToCrashService});
 ```
 
 ## Best Practices
 
-1. **Configure Once**: Set up Ghost Logger in your `main()` function, before running the app
+### 1. Configure Once
 
-2. **Use Tags**: Add meaningful tags to identify log sources
+Set up Ghost Logger in your `main()` function:
 
-```dart
-GhostLogger.log(message: 'Data loaded', tag: 'DataService');
 ```
+void main() async {
+WidgetsFlutterBinding.ensureInitialized();
 
-3. **Appropriate Levels**: Use the correct log level for better filtering
-
-```dart
-LogLevel.debug     // Development only
-LogLevel.info      // User actions, flow
-LogLevel.warning   // Potential issues
-LogLevel.error     // Failures and exceptions
-```
-
-4. **Include Stack Traces**: Always include stack traces for errors
-
-```dart
-GhostLogger.log(
-  message: 'Operation failed',
-  level: LogLevel.error,
-  stackTrace: StackTrace.current,
-);
-```
-
-5. **Production Configuration**: Disable debug output in production
-
-```dart
 await GhostLogger.configure(
-  isDebugMode: kDebugMode,
-  loggerType: LoggerType.console,
-  crashReporter: GhostFirebase(),
-  enableCrashReporting: kReleaseMode,
+loggerType: LoggerType.console,
+crashReporter: FirebaseCrashReporter(),
+enableCrashReporting: kReleaseMode,
+);
+
+runApp(const MyApp());
+}
+```
+
+### 2. Use Meaningful Tags
+
+Tags help identify log sources:
+
+```
+GhostLogger.logInfo('Data loaded', tag: 'DataService');
+GhostLogger.logError('Login failed', tag: 'Auth');
+```
+
+### 3. Choose Appropriate Levels
+
+| Level | When to Use |
+|-------|-------------|
+| `logDebug()` | Variable values, detailed flow |
+| `logInfo()` | User actions, important events |
+| `logWarning()` | Potential issues, deprecations |
+| `logError()` | Failures, exceptions |
+
+### 4. Always Include Stack Traces for Errors
+
+```
+try {
+await riskyOperation();
+} catch (e, stackTrace) {
+GhostLogger.logError(
+'Operation failed: $e',
+tag: 'Service',
+stackTrace: stackTrace,
+);
+}
+```
+
+### 5. Production-Ready Configuration
+
+```
+await GhostLogger.configure(
+loggerType: LoggerType.console,
+withColors: false,                      // Disable colors in production
+crashReporter: FirebaseCrashReporter(),
+enableCrashReporting: kReleaseMode,     // Only report in release
 );
 ```
 
-## Examples
+## Example App
 
-See the `example` directory for a complete Flutter app demonstrating Ghost Logger usage.
+Check out the complete example in the `example/` directory:
 
-Run the example:
-
-```bash
+```
 cd example
 flutter run
 ```
 
+The example demonstrates:
+- Basic configuration
+- All convenience methods
+- Colored output
+- Error handling with stack traces
+
+## Troubleshooting
+
+### Colors Not Working in Android Studio
+
+Android Studio has limited ANSI color support. Try:
+
+1. **Disable colors:**
+```
+    await GhostLogger.configure(withColors: false);
+```
+2. **Use VS Code:** Better color support
+
+3. **Use external terminal:** Run `flutter run` from your system terminal
+
+### Hot Reload Issues
+
+If hot reload stops working after logging:
+1. This is usually an IDE issue, not the package
+2. Disable colors: `withColors: false`
+3. Restart the IDE
+
 ## Platform Support
 
-Ghost Logger works on all platforms:
-
 - ✅ Android
-- ✅ iOS
+- ✅ iOS  
 - ✅ Web
 - ✅ macOS
 - ✅ Windows
@@ -320,15 +387,19 @@ Ghost Logger works on all platforms:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues on GitHub.
+Contributions are welcome! Please:
+1. Open an issue to discuss changes
+2. Submit a pull request with tests
+3. Follow the existing code style
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see [LICENSE](LICENSE) file
 
 ## Support
 
-For issues, questions, or suggestions, please open an issue on GitHub.
+- 🐛 **Issues:** [GitHub Issues](https://github.com/hamdy24/ghost_logger/issues)
+- 💬 **Discussions:** [GitHub Discussions](https://github.com/hamdy24/ghost_logger/discussions)
 
 ---
 
