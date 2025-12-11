@@ -1,21 +1,30 @@
+## 1.1.0
+
+### Features
+- Added convenience logging methods:
+    - `GhostLogger.logDebug()` - Debug logging
+    - `GhostLogger.logInfo()` - Info logging
+    - `GhostLogger.logWarning()` - Warning logging
+    - `GhostLogger.logError()` - Error logging
+
+### Bug Fixes
+- Fixed color output issues in Android Studio console
+- Improved color reset reliability with separate print calls
+
+### Breaking Changes
+- Removed `LoggerType.logger` enum value
+- Use `LoggerType.console` instead if you were using `LoggerType.logger`
+
+---
+
 ## 1.0.0
 
-- **FEAT**: Added colored terminal output for all log levels to improve readability.
-    - Debug logs: Gray
-    - Info logs: Cyan
-    - Warning logs: Yellow
-    - Error logs: Red
-- **FEAT**: `isDebugMode` now defaults to Flutter's `kDebugMode` - no need to specify manually.
-- **BREAKING**: Package now depends on Flutter SDK. This makes configuration easier but limits usage to Flutter projects only.
-- **IMPROVEMENT**: Enhanced visual distinction between log types with both emojis and colors.
+- Added colored terminal output for log levels
+- `isDebugMode` now defaults to `kDebugMode`
+- Package now depends on Flutter SDK
 
-## 0.0.1
+---
 
-- Initial release of Ghost Logger
-- Support for multiple log levels (debug, info, warning, error)
-- Emoji indicators for visual log scanning
-- Pluggable crash reporting via CrashReporter interface
-- Multiple output mechanisms (print, developer.log)
-- Comprehensive test coverage
-- Working example app
-- **Tagline:** Stealing errors before they steal your users' experience
+## 0.1.0
+
+- Initial release

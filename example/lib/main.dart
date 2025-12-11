@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // No need to specify isDebugMode anymore - it defaults to kDebugMode!
   await GhostLogger.configure(
     loggerType: LoggerType.console,
   );
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Ghost Logger Demo - Now with Colors!'),
+      home: const MyHomePage(title: 'Ghost Logger Demo'),
     );
   }
 }
@@ -61,56 +62,48 @@ class _MyHomePageState extends State<MyHomePage> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  '✨ Now with colored terminal output! ✨',
+                  '✨ Now with convenience methods! ✨',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 32),
               _LogButton(
-                label: '⚒️ Log Debug (Gray)',
+                label: '⚒️ Log Debug',
                 color: Colors.grey,
                 onPressed: () {
-                  GhostLogger.log(
-                    message:
-                        'This is a debug message - check your terminal to see it in gray!',
-                    level: LogLevel.debug,
+                  GhostLogger.logDebug(
+                    'This is a debug message using convenience method',
                     tag: 'Example',
                   );
                 },
               ),
               _LogButton(
-                label: '👉 Log Info (Cyan)',
+                label: '👉 Log Info',
                 color: Colors.cyan,
                 onPressed: () {
-                  GhostLogger.log(
-                    message:
-                        'User performed an action - check your terminal to see it in cyan!',
-                    level: LogLevel.info,
+                  GhostLogger.logInfo(
+                    'User performed an action',
                     tag: 'Example',
                   );
                 },
               ),
               _LogButton(
-                label: '⚠️ Log Warning (Yellow)',
+                label: '⚠️ Log Warning',
                 color: Colors.orange,
                 onPressed: () {
-                  GhostLogger.log(
-                    message:
-                        'This might need attention - check your terminal to see it in yellow!',
-                    level: LogLevel.warning,
+                  GhostLogger.logWarning(
+                    'This might need attention',
                     tag: 'Example',
                   );
                 },
               ),
               _LogButton(
-                label: '❌ Log Error (Red)',
+                label: '❌ Log Error',
                 color: Colors.red,
                 onPressed: () {
-                  GhostLogger.log(
-                    message:
-                        'An error occurred silently - check your terminal to see it in red!',
-                    level: LogLevel.error,
+                  GhostLogger.logError(
+                    'An error occurred silently',
                     tag: 'Example',
                     stackTrace: StackTrace.current,
                   );
@@ -120,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Check your console output to see the colored messages',
+                  'Check your console output to see the logged messages',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
