@@ -125,7 +125,7 @@ class GhostLogger {
     // Auto-cleanup runs at startup if enabled and any file logging is active
     final anyFileLoggingEnabled =
         storeWarnings || storeErrors || storeInfo || storeDebug;
-    if (autoCleanOldLogs && anyFileLoggingEnabled) {
+    if (_autoCleanOldLogs && anyFileLoggingEnabled) {
       await cleanOldLogs();
     }
   }
