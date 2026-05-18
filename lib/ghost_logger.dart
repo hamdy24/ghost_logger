@@ -30,3 +30,4 @@ export 'src/crash_reporter.dart';
 export 'src/ghost_logger.dart';
 export 'src/log_level.dart';
 export 'src/logger_type.dart';
+export 'src/log_export_scope.dart';
