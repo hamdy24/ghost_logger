@@ -220,6 +220,16 @@ final List<File>? allFiles = await GhostLogger.exportLogs(
 
 `exportLogs()` returns `null` when no log files have been written yet — Dart null safety ensures you handle this case.
 
+### Diagnostic Log Reporting
+
+If you are tracking down "silent bugs" (issues where the app logic fails but no actual exception is thrown), you can command GhostLogger to push its current log files directly to your crash reporter.
+
+```dart
+// Send the current session's log files to your crash service on demand
+await GhostLogger.sendDiagnosticLogs();
+```
+Note: This relies on your `CrashReporter` implementation of `sendDiagnosticLogs()`. By default, it does nothing unless implemented.
+
 ### Cleaning Log Files
 
 ```dart
@@ -268,6 +278,12 @@ class FirebaseCrashReporter implements CrashReporter {
     await FirebaseCrashlytics.instance
         .setCrashlyticsCollectionEnabled(enabled);
   }
+
+  @override
+  Future<void> sendDiagnosticLogs() async {
+    // Implement your file reading and diagnostic upload logic here.
+    // See the package documentation or GitHub repository for a complete example.
+  }
 }
 
 void main() async {
@@ -299,6 +315,9 @@ class CustomCrashReporter implements CrashReporter {
 
   @override
   Future<void> setCollectionEnabled(bool enabled) async { /* your implementation */ }
+
+  @override
+  Future<void> sendDiagnosticLogs() async { /* your implementation */ }
 }
 ```
 

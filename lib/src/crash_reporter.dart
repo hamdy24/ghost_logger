@@ -20,6 +20,12 @@
 ///   Future<void> setCollectionEnabled(bool enabled) async {
 ///     // Enable/disable crash collection
 ///   }
+///
+///   @override
+///   Future<void> sendDiagnosticLogs() async {
+///     // Upload local logs to your crash service
+///   }
+///
 /// }
 /// ```
 abstract class CrashReporter {
@@ -44,6 +50,15 @@ abstract class CrashReporter {
   ///
   /// Use this to disable collection in debug mode or based on user preferences.
   Future<void> setCollectionEnabled(bool enabled);
+
+  /// Extracts local file logs and sends them to the crash reporting service
+  /// as a diagnostic report.
+  ///
+  /// Useful for retrieving a user's local log history when no actual crash
+  /// occurred, allowing developers to debug silent logical errors.
+  ///
+  /// This is useful if you store the logs using the store logs flags when you configure the GhostLogger.
+  Future<void> sendDiagnosticLogs();
 }
 
 /// No-op implementation for when crash reporting is disabled.
@@ -68,4 +83,7 @@ class NullCrashReporter implements CrashReporter {
 
   @override
   Future<void> setCollectionEnabled(bool enabled) async {}
+
+  @override
+  Future<void> sendDiagnosticLogs() async {}
 }

@@ -24,6 +24,11 @@ class TestCrashReporter implements CrashReporter {
   Future<void> setCollectionEnabled(bool enabled) async {
     isEnabled = enabled;
   }
+
+  @override
+  Future<void> sendDiagnosticLogs() async {
+    // Implement your file reading and diagnostic upload logic here.
+  }
 }
 
 void main() {

@@ -1,3 +1,8 @@
+## 1.3.0
+
+* **Feature:** Added `GhostLogger.sendDiagnosticLogs()` to bridge local file logs directly to your crash reporting service for silent bug tracking.
+* **Breaking Change:** Added `sendDiagnosticLogs()` to the `CrashReporter` interface. If you have a custom crash reporter implementation, you must override this new method.
+
 ## 1.2.0
 
 ### Features

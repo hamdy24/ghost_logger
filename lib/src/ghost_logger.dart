@@ -322,6 +322,18 @@ class GhostLogger {
     );
   }
 
+  /// Commands the active crash reporter to extract and upload local diagnostic logs.
+  ///
+  /// This bridges your local file logs to your remote crash reporting service.
+  /// If file logging is enabled (e.g., `storeDebug: true`), this will command
+  /// the integrated [CrashReporter] to bundle the current session's logs and
+  /// ship them as a non-fatal diagnostic report.
+  ///
+  /// Does nothing if no [CrashReporter] is configured or if file logging is disabled.
+  static Future<void> sendDiagnosticLogs() async {
+    await _crashReporter.sendDiagnosticLogs();
+  }
+
   /// Formats the log message with emoji, level, and optional tag.
   static String _formatMessage(dynamic message, LogLevel level, String? tag) {
     final tagPrefix = tag != null ? '[$tag] ' : '';
