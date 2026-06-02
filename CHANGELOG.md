@@ -1,3 +1,14 @@
+## 1.3.1
+
+* **Fix:** Replaced the boolean re-entrancy guard in `_writeToFile` with a serial
+  write queue (`Future`-chaining). Concurrent fire-and-forget log calls no longer
+  race against each other, eliminating silent log drops when many entries are
+  written in quick succession.
+* **New:** Added `GhostLogger.flush()` — awaits all pending file writes before
+  returning. Call this in your app's dispose or shutdown handler to ensure no
+  buffered entries are lost before the process exits. No changes are required at
+  existing call sites.
+* 
 ## 1.3.0
 
 * **Feature:** Added `GhostLogger.sendDiagnosticLogs()` to bridge local file logs directly to your crash reporting service for silent bug tracking.

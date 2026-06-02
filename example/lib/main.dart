@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // No need to specify isDebugMode anymore - it defaults to kDebugMode!
   await GhostLogger.configure(
     loggerType: LoggerType.console,
+    storeErrors: true,
+    storeWarnings: true,
   );
 
   runApp(const MyApp());
@@ -38,6 +39,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // Simulate a rapid burst of logs to demonstrate the write queue
+  void _logBurst() {
+    for (var i = 1; i <= 10; i++) {
+      GhostLogger.logDebug('Burst log #$i', tag: 'Example');
+    }
+  }
+
+  @override
+  void dispose() {
+    // Drain the write queue before the widget tree tears down so no
+    // buffered file entries are lost on app exit
+    GhostLogger.flush();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  '✨ Now with convenience methods! ✨',
+                  '✨ Now with a serial write queue — zero dropped logs ✨',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -107,6 +123,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     tag: 'Example',
                     stackTrace: StackTrace.current,
                   );
+                },
+              ),
+              const Divider(height: 48),
+              _LogButton(
+                label: '🚀 Burst 10 Logs (tests write queue)',
+                color: Colors.deepPurple,
+                onPressed: _logBurst,
+              ),
+              _LogButton(
+                label: '💾 Flush pending writes',
+                color: Colors.teal,
+                onPressed: () async {
+                  await GhostLogger.flush();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('All pending writes flushed')),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 32),

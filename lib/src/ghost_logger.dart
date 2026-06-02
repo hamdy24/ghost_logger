@@ -44,7 +44,11 @@ class GhostLogger {
   static bool _storeDebug = false;
   static int _logRetentionDays = 7;
   static bool _autoCleanOldLogs = true;
-  static bool _isWritingToFile = false;
+  // Serial write queue — all file writes are chained onto this future so they
+  // execute one at a time in arrival order. Replacing the boolean re-entrancy
+  // guard, this approach guarantees no log entry is ever dropped when multiple
+  // log calls fire concurrently.
+  static Future<void> _writeQueue = Future.value();
   static void Function(File logFile, LogLevel level)? _onLogFileUpdated;
 
   // Lazily populated on first write per level within a session
@@ -112,7 +116,9 @@ class GhostLogger {
     _errorFile = null;
     _infoFile = null;
     _debugFile = null;
-    _isWritingToFile = false;
+    // Reset the write queue for the new session so it does not carry over
+    // pending writes from a previous configure() call
+    _writeQueue = Future.value();
 
     // Capture session timestamp once — used for all log filenames this session
     _sessionTimestamp = LogFileManager.formatSessionTimestamp(DateTime.now());
@@ -131,6 +137,16 @@ class GhostLogger {
   }
 
   /// Logs a message with specified level and optional metadata.
+  ///
+  /// Console output is written synchronously before this method returns.
+  /// File writes are enqueued and executed asynchronously in arrival order
+  /// without blocking the caller. All enqueued writes are guaranteed to
+  /// complete as long as the app remains alive; call [flush] before shutdown
+  /// to ensure the queue drains if that cannot be guaranteed.
+  ///
+  /// The returned [Future] resolves immediately after console output and
+  /// crash reporting are dispatched. Awaiting it is optional — callers that
+  /// do not await still receive full file write guarantees.
   ///
   /// [message] the content to log (required).
   /// [level] severity of the log message (default: debug).
@@ -151,8 +167,9 @@ class GhostLogger {
       _writeToConsole(formattedMessage, level, stackTrace);
     }
 
-    // File output — NOT gated by debug mode, works in release builds
-    await _writeToFile(message: message.toString(), level: level, tag: tag);
+    // File output — NOT gated by debug mode, works in release builds.
+    // Enqueued onto the serial write queue; returns immediately to the caller.
+    _enqueueFileWrite(message: message.toString(), level: level, tag: tag);
 
     if (shouldReportToCrash) {
       await _reportToCrashReporter(message, level, stackTrace);
@@ -255,6 +272,26 @@ class GhostLogger {
     );
   }
 
+  /// Waits for all pending file writes to complete.
+  ///
+  /// Log calls enqueue file writes asynchronously and return immediately,
+  /// so there may be writes still in progress when the app is about to
+  /// terminate. Call [flush] in your app's dispose or shutdown handler to
+  /// ensure no buffered entries are lost before the process exits.
+  ///
+  /// [flush] is a no-op when file logging is disabled or no writes are
+  /// pending. It is safe to call at any time.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// Future<void> dispose() async {
+  ///   await GhostLogger.flush();
+  ///   super.dispose();
+  /// }
+  /// ```
+  static Future<void> flush() => _writeQueue;
+
   /// Returns all log files written in the current session, or null if no
   /// file logging is active or no logs have been written yet.
   ///
@@ -297,7 +334,12 @@ class GhostLogger {
       for (final file in files) {
         // For allSessions, level is inferred from filename; current session uses map
         final level = levelMap[file] ?? _inferLevelFromFilename(file);
-        if (level != null) _onLogFileUpdated!(file, level);
+        if (level != null &&
+            _onLogFileUpdated != null &&
+            file.existsSync() &&
+            file.lengthSync() > 0) {
+          _onLogFileUpdated!(file, level);
+        }
       }
     }
 
@@ -503,24 +545,29 @@ class GhostLogger {
     return chunks;
   }
 
-  /// Writes a log entry to the level's local file if file logging is enabled
-  /// for that level.
+  /// Appends a file write task for [message] to the serial write queue.
+  ///
+  /// Each call chains a new async task onto [_writeQueue] so writes execute
+  /// one at a time in the order they were enqueued, regardless of how many
+  /// concurrent log calls are in flight. The caller returns immediately
+  /// without waiting for the write to complete.
+  ///
+  /// Any exception thrown during a write is caught and emitted via
+  /// [debugPrint] so a single failed write never breaks the queue or
+  /// silences subsequent entries.
   ///
   /// Does nothing on Flutter Web — a debug warning is emitted instead.
   /// File writing is not gated by [_isDebugMode] and runs in release builds.
-  static Future<void> _writeToFile({
+  static void _enqueueFileWrite({
     required String message,
     required LogLevel level,
     required String? tag,
-  }) async {
+  }) {
     if (kIsWeb) {
       // ignore: avoid_print
       debugPrint('GhostLogger: file logging is not supported on Flutter Web.');
       return;
     }
-    // Guard against re-entrant calls — prevents infinite loops when the
-    // onLogFileUpdated callback itself calls GhostLogger.log*()
-    if (_isWritingToFile) return;
 
     final shouldStore = switch (level) {
       LogLevel.debug => _storeDebug,
@@ -531,23 +578,27 @@ class GhostLogger {
 
     if (!shouldStore || _sessionTimestamp == null) return;
 
-    _isWritingToFile = true;
-    // Resolve the file lazily — created on first write for this level/session
-    try {
-      final file = await _resolveFileForLevel(level);
+    // Chain onto the tail of the queue — this task will not start until the
+    // previous task completes, ensuring strict write ordering
+    _writeQueue = _writeQueue
+        .then((_) async {
+          // Resolve the file lazily — created on first write for this level/session
+          final file = await _resolveFileForLevel(level);
 
-      final line = LogFileManager.formatLine(
-        level: level.name,
-        tag: tag,
-        message: message,
-      );
+          final line = LogFileManager.formatLine(
+            level: level.name,
+            tag: tag,
+            message: message,
+          );
 
-      await LogFileManager.writeLine(file, line);
+          await LogFileManager.writeLine(file, line);
 
-      _onLogFileUpdated?.call(file, level);
-    } finally {
-      _isWritingToFile = false;
-    }
+          _onLogFileUpdated?.call(file, level);
+        })
+        .catchError((Object error) {
+          // A write failure must not break the queue or suppress future entries
+          debugPrint('GhostLogger: file write error: $error');
+        });
   }
 
   /// Returns the cached file for [level], creating it if this is the first

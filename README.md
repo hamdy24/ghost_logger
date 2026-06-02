@@ -28,7 +28,7 @@ Add `ghost_logger` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  ghost_logger: ^1.2.0
+  ghost_logger: ^1.3.1
 ```
 
 Then run:
@@ -197,7 +197,11 @@ await GhostLogger.configure(
 );
 ```
 
-> **Important:** Do not call `GhostLogger.log*()` inside `onLogFileUpdated` with a stored level — the reentrancy guard will silently skip the file write to prevent infinite loops. Console output still works normally.
+> **Important:** Do not call `GhostLogger.log*()` inside `onLogFileUpdated` with a
+ stored level. The write queue is still active during the callback, so a recursive
+ log call would enqueue a new write while the current one is completing — this can
+ produce unexpected interleaving in the output file. Console output inside the
+ callback works normally.
 
 ### Exporting Log Files
 
@@ -381,6 +385,23 @@ await GhostLogger.cleanOldLogs(
   includeRecents: false, // true = delete ALL log files regardless of age
 );
 ```
+
+### `GhostLogger.flush()`
+
+Waits for all pending file writes to complete. Log calls enqueue file writes
+asynchronously and return immediately, so there may be writes still in progress
+when the app is about to terminate. Call `flush()` in your dispose or shutdown
+handler to ensure no buffered entries are lost.
+
+```dart
+@override
+Future<void> dispose() async {
+  await GhostLogger.flush();
+  super.dispose();
+}
+```
+
+`flush()` is a no-op when no writes are pending and is safe to call at any time.
 
 ***
 

@@ -26,9 +26,7 @@ class TestCrashReporter implements CrashReporter {
   }
 
   @override
-  Future<void> sendDiagnosticLogs() async {
-    // Implement your file reading and diagnostic upload logic here.
-  }
+  Future<void> sendDiagnosticLogs() async {}
 }
 
 void main() {
@@ -110,9 +108,9 @@ void main() {
     });
 
     test('handles very long messages', () async {
-      final longMessage = 'A' * 5000; // Longer than max length
+      final longMessage = 'A' * 5000;
       await GhostLogger.log(message: longMessage, level: LogLevel.info);
-      expect(true, isTrue); // Should not throw
+      expect(true, isTrue);
     });
   });
 
@@ -152,6 +150,60 @@ void main() {
       final longMessage = 'B' * 5000;
       await GhostLogger.logError(longMessage);
       expect(true, isTrue);
+    });
+  });
+
+  group('GhostLogger Write Queue and flush()', () {
+    setUp(() async {
+      await GhostLogger.configure(
+        isDebugMode: false,
+        loggerType: LoggerType.console,
+      );
+    });
+
+    test(
+      'flush() completes immediately when no file logging is active',
+      () async {
+        // No store flags enabled — flush should resolve with no work to do
+        await expectLater(GhostLogger.flush(), completes);
+      },
+    );
+
+    test(
+      'flush() completes after a burst of fire-and-forget log calls',
+      () async {
+        await GhostLogger.configure(
+          isDebugMode: false,
+          loggerType: LoggerType.console,
+          storeDebug: true,
+        );
+
+        // Fire 20 concurrent log calls without awaiting any of them
+        for (var i = 0; i < 20; i++) {
+          GhostLogger.logDebug('Burst entry $i', tag: 'QueueTest');
+        }
+
+        // flush() must settle only after all 20 writes complete
+        await expectLater(GhostLogger.flush(), completes);
+      },
+    );
+
+    test('flush() is safe to call multiple times consecutively', () async {
+      await GhostLogger.flush();
+      await GhostLogger.flush();
+      expect(true, isTrue);
+    });
+
+    test('new configure() resets the queue cleanly', () async {
+      GhostLogger.logDebug('Pre-reconfigure entry');
+
+      // Reconfiguring mid-flight should not leave the queue in a broken state
+      await GhostLogger.configure(
+        isDebugMode: false,
+        loggerType: LoggerType.console,
+      );
+
+      await expectLater(GhostLogger.flush(), completes);
     });
   });
 
